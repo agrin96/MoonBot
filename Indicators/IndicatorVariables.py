@@ -3,7 +3,8 @@ from .Indicators import (
     ChaikinOscillator,
     MovingAverageConverganceDivergence,
     MoneyFlowIndex,
-    RelativeStrengthIndex)
+    RelativeStrengthIndex,
+    StochasticOscillator)
 
 indicator_variables = [
     {
@@ -25,5 +26,9 @@ indicator_variables = [
     {
         "name": "macd",
         "generator": MovingAverageConverganceDivergence,
+    },
+    {
+        "name": "stochastic",
+        "generator": StochasticOscillator,
     },
 ]

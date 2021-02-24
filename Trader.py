@@ -54,13 +54,13 @@ candle_buffer = DataBuffer(max_size=500,
                            header=["open","high","low","close","volume","elements"])
 prev_volume = 0.0
 running_volume = 100000.0
-candle_period = 30
-ramp_up_period = 120
+candle_period = 300
+ramp_up_period = 30
 current_candle = new_candle()
 first_price = None
 
 tree = None
-with open("./SerializedTrees/popfile-1.json") as file:
+with open("./SerializedTrees/popfile-0.json") as file:
     tree = deserialize_tree(file.read())
 
 current_balance = 100.0
