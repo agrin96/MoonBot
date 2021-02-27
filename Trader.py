@@ -49,13 +49,13 @@ async def keep_alive(ws):
         await ws.pong()
 
 
-candle_buffer = DataBuffer(max_size=500,
+candle_buffer = DataBuffer(max_size=300,
                            filename="btcusdt_candles.csv",
                            header=["open","high","low","close","volume","elements"])
 prev_volume = 0.0
 running_volume = 100000.0
-candle_period = 300
-ramp_up_period = 30
+candle_period = 30
+ramp_up_period = 0
 current_candle = new_candle()
 first_price = None
 

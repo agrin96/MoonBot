@@ -11,8 +11,7 @@ from .RawIndicators import (
     chaikin_oscillator,
     simple_moving_average,
     array_shift,
-    moving_average_convergance_divergance,
-    on_balance_volume)
+    moving_average_convergance_divergance)
 
 def generate_bop_decisions(candles:pd.DataFrame,
                            buy_threshold:float=-0.24,

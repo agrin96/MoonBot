@@ -222,7 +222,7 @@ def relative_strength_index(data:pd.DataFrame,period:int)->np.array:
     return 100 - (100/(1+rs))
 
 
-def stochastic_oscillator(data:pd.DataFrame,period:int)->np.array:
+def stochastic_oscillator(data:pd.DataFrame,period:int,signal_period:int)->np.array:
     """Calculates the stochastic oscillator data which is a momentum indicator
     telling us whether a stock is overbought or oversold. Overbought threshold
     is set to 80 and oversold is set at 20. Usually used with the 3 period 
@@ -232,14 +232,14 @@ def stochastic_oscillator(data:pd.DataFrame,period:int)->np.array:
     result = np.repeat(np.nan,period-1)
     index = period
     while index < data.shape[0]+1:
-        temp = data.iloc[max(0,index-period):index,:]
+        temp = data.iloc[(index-period):index,:]
         high = np.max(temp["high"])
         low = np.min(temp["low"])
-        close = data.iloc[index-1,:]["close"]
+        close = temp["close"].iloc[-1]
         result = np.append(result,((close-low)/(high-low)*100))
         index += 1
     
-    return result
+    return simple_moving_average(result,signal_period)
 
 
 def ulcer_index(data:pd.DataFrame,period:int)->np.array:

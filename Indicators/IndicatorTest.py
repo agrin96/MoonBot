@@ -1,9 +1,8 @@
-import sys
 from typing import List,Dict
 import pandas as pd
 import numpy as np
 
-sys.path.append("../RawIndicators/")
+import sys
 sys.path.append("../")
 
 from Candle import new_candle
@@ -14,14 +13,16 @@ from Indicators import (
 	BalanceOfPower,
 	MoneyFlowIndex,
 	ChaikinOscillator,
-	MovingAverageConverganceDivergence)
+	MovingAverageConverganceDivergence,
+	StochasticOscillator)
 
-from RawIndicators import (
+from RawIndicators.RawIndicators import (
 	relative_strength_index,
 	balance_of_power,
 	money_flow_index,
 	chaikin_oscillator,
-	moving_average_convergance_divergance)
+	moving_average_convergance_divergance,
+	stochastic_oscillator)
 
 candle_period = 30
 prev_volume = 0.0
@@ -134,12 +135,12 @@ def convert_ticker_to_candles(ticker:pd.DataFrame,
 
 
 def main():
-	ticker_data = pd.read_csv("../BTCUSDT_ticker.csv")
+	ticker_data = pd.read_csv("../Data/BTCUSDT_ticker.csv")
 	ticker_data = ticker_data[["best_bid","best_ask","total_traded_asset"]]
 	ticker_data = ticker_data.to_dict("records")
 
 	current_candle = new_candle()
-	candles = DataBuffer(max_size=500,
+	candles = DataBuffer(max_size=300,
 						 filename="candles.csv",
 						 header=["open","high","low","close","volume","elements"])
 
@@ -168,18 +169,13 @@ def main():
 							slow_period=18,
 							signal_period=6,
 							buffer_size=250)
-	macd_class_values = []
-	macd_class = MovingAverageConverganceDivergence(
-							fast_period=9,
-							slow_period=18,
-							signal_period=6,
+	stochastic_class_values = []
+	stochastic_class = StochasticOscillator(
+							period=14,
+							signal_period=3,
+							buy_threshold=20,
+							sell_threshold=80,
 							buffer_size=250)
-	# chaikin_class_values = []
-	# chaikin_class = ChaikinOscillator(
-	# 						slow_period=18,
-	# 						fast_period=3,
-	# 						signal_period=9,
-	# 						buffer_size=250)
 	# -------------------------------------------------------
 	
 	ramp_up_candles = 100
@@ -191,12 +187,12 @@ def main():
 			mfi_class_values.append(mfi_class.next_value(candles.get_all()))
 			bop_class_values.append(bop_class.next_value(candles.get_all()))
 			macd_class_values.append(macd_class.next_value(candles.get_all()))
-			# chaikin_class_values.append(chaikin_class.next_value(candles.get_all()))
+			stochastic_class_values.append(stochastic_class.next_value(candles.get_all()))
 			current_candle = new_candle()
 
 	# -------------------------------------------------------
 	# Compute the numpy indicators
-	ticker_data = pd.read_csv("../BTCUSDT_ticker.csv")
+	ticker_data = pd.read_csv("../Data/BTCUSDT_ticker.csv")
 	ticker_data = ticker_data[["best_bid","best_ask","total_traded_asset"]]
 	candles_df = convert_ticker_to_candles(ticker_data,candle_period)
 	candles_df.to_csv("../buffers/candles_df_debug.csv")
@@ -204,9 +200,10 @@ def main():
 	rsi_np_values = list(relative_strength_index(candles_df,18))
 	mfi_np_values = list(money_flow_index(candles_df,18))
 	bop_np_values = list(balance_of_power(candles_df,18))
-	macd,signal,_ = moving_average_convergance_divergance(candles_df["close"].values,9,18,6)
-	macd_np_values = list(macd-signal)
-	# chaikin_np_values = list(chaikin_oscillator(candles_df,18,3))
+	_,_,macd_np_values = moving_average_convergance_divergance(candles_df["close"].values,9,18,6)
+	macd_np_values = list(macd_np_values)
+	stochastic_np_values = list(stochastic_oscillator(candles_df,14,3))
+
 	# -------------------------------------------------------
 
 	# Compare the indicator results
@@ -229,6 +226,11 @@ def main():
 	macdA = np.array(macd_np_values[23:])
 	macdB = np.array(macd_class_values[23:])
 	np.testing.assert_allclose(macdA,macdB,rtol=1e-12)
+
+	print("Stochastic Test")
+	stochasticA = np.array(stochastic_np_values[14:])
+	stochasticB = np.array(stochastic_class_values[14:])
+	np.testing.assert_allclose(stochasticA,stochasticB,rtol=1e-12)
 
 	print("Tests Passed!")
 

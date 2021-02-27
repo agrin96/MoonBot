@@ -491,7 +491,8 @@ class BalanceOfPower(BaseIndicator):
 
 class StochasticOscillator(BaseIndicator):
 	def __init__(self,
-				 period:int=3,
+				 period:int=14,
+				 signal_period:int=3,
 				 buy_threshold:float=20,
 				 sell_threshold:float=80,
 				 buffer_size:int=250,
@@ -505,7 +506,7 @@ class StochasticOscillator(BaseIndicator):
 		self._lows = DataBuffer(max_size=period)
 
 		self._raw_stochastic =DataBuffer(max_size=120)
-		self._sma = SimpleMovingAverage(period,buffer_size=period)
+		self._sma = SimpleMovingAverage(signal_period,buffer_size=signal_period)
 
 		if output:
 			self._indicator_buffer = DataBuffer(
@@ -524,14 +525,13 @@ class StochasticOscillator(BaseIndicator):
 		self._highs.push(latest["high"])
 		self._lows.push(latest["low"])
 
-		if len(candles) < self._period-1:
+		if len(candles) < self._period:
 			return self._indicator_buffer.get(-1)
 
 		lowest_low = np.min(self._lows.get_all())
 		highest_high = np.max(self._highs.get_all())
 
-		stochastic = (latest["close"] - lowest_low)/(highest_high-lowest_low)
-		stochastic *= 100
+		stochastic = (latest["close"]-lowest_low)/(highest_high-lowest_low)*100
 
 		self._raw_stochastic.push(stochastic)
 		percentD = self._sma.next_value(self._raw_stochastic.get_all())
