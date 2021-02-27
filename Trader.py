@@ -12,6 +12,7 @@ from Candle import new_candle,update_current_candle
 from TreeActions import evaluate_next_value,make_tree_decision
 from TreeIO import deserialize_tree
 from TradeConfiguration import TradingConfiguration
+from Reporting import live_trade_report
 
 tickers = [
     "btcusdt"
@@ -42,33 +43,6 @@ trade_state = TradingConfiguration(candle_period=30,build_period=0)
 def parse_ticker_data_row(data:Dict)->Dict:
     """Expand the returned ticker names and use them to get data we want."""
     return {v:data[k] for k,v in ticker_mapping.items()}
-
-
-def live_trade_report(ticker:Dict):
-    """Prints some useful statistics about how we are currently doing in our
-    trades."""
-    global trade_state
-            
-    # Produce a live balance that gets updated every tick.
-    if trade_state.coin_balance != 0.0:
-        temp = (trade_state.coin_balance * float(ticker["best_bid"]))\
-                *trade_state.fee
-        print(F"Appx Balance: {temp}, Coins: {trade_state.coin_balance}")
-    else:
-        print(F"Current Balance: {trade_state.current_balance},"\
-              F" Coins: {trade_state.coin_balance}")
-
-    # Prints the baseline balance of holding long for comparison
-    if trade_state.first_price is None:
-        trade_state.first_price = float(ticker["best_ask"])
-        trade_state.initial_coin_balance =\
-            (trade_state.current_balance / trade_state.first_price)\
-                *trade_state.fee
-    else:
-        temp = (100.0 / trade_state.first_price)*trade_state.fee
-        long = (temp * float(ticker["best_bid"]))*trade_state.fee
-        print(F"Initial Coin Balance: {trade_state.initial_coin_balance}")
-        print(F"Long Balance: {long}\n")
 
 
 def make_trading_decision(ticker:Dict):
@@ -128,7 +102,7 @@ async def trader(ws,ticker:str):
                 period_counter = 0
             
             ticker_data = parse_ticker_data_row(data["data"])
-            live_trade_report(ticker_data)
+            live_trade_report(trade_state,ticker_data)
 
             if update_current_candle(trade_state,ticker_data):
                 print("!--------- Pushing New Candle ------------!")
