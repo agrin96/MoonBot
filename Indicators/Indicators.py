@@ -2,7 +2,7 @@ from __future__ import annotations
 from typing import List,Dict,Any
 import numpy as np
 
-from BaseIndicator import BaseIndicator
+from .BaseIndicator import BaseIndicator
 from DataBuffer import DataBuffer
 
 
